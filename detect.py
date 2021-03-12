@@ -5,7 +5,7 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
-from numpy import random
+from numpy import random ,load , linalg , array ,dot, int0, resize
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -13,6 +13,35 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
+
+
+def minRectangle(xywhpixels):
+    x,y,w,h = xywhpixels
+    pts = array([[x-w/2,y+h/2],[x-w/2,y-h/2],[x+w/2,y-h/2], [x+w/2,y+h/2]])
+    pts = resize(pts, (4,1,2))
+    print(pts.shape)
+    rect = cv2.minAreaRect(pts)
+    box = cv2.boxPoints(rect)
+    box = int0(box)
+    print(box)
+    return box
+
+
+
+def getXYZworld(xywhpixels):
+    x,y,w,h = xywhpixels 
+    # intrinsic_Mtx = load("mtx_logi.npy")          #Logitech Camera
+    
+    intrinsic_Mtx = load("mtx_logiRobot.npy")          #Our Calibration of Robot_Real Camera
+    # intrinsic_Mtx = load("RobotCameraIntrinsics.npy")   #Robot_Real Camera
+    Inv_intrinsic_Mtx = linalg.inv(intrinsic_Mtx) 
+    f = sum([intrinsic_Mtx[0,0],intrinsic_Mtx[1,1]])/2.0
+    z = 40 * f / min(w,h)
+    [X,Y,Z] = dot(Inv_intrinsic_Mtx, z * array([[x],[y],[1]])) 
+    [X,Y,Z] = [ '%.2f' % elem for elem in [X,Y,Z]]
+
+    return  X,Y,Z
+
 
 
 def detect(save_img=False):
@@ -102,15 +131,20 @@ def detect(save_img=False):
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+                    xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4))).view(-1).tolist()  # un-normalized xywh
+                    XYZ_camera = getXYZworld(xywh)
                     if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
-                        with open(txt_path + '.txt', 'a') as f:
-                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                        # line = (cls, *xyxy, conf) if opt.save_conf else (cls, *xyxy)  # label format
+                        with open( 'bo7sen' + '.txt', 'w') as f:
+                            f.write(str(XYZ_camera[0]) + " " + str(XYZ_camera[1]) + " " + str(XYZ_camera[2]))
+                            # f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                     if save_img or view_img:  # Add bbox to image
-                        label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        print(XYZ_camera) 
+                        label = f'{names[int(cls)]}{XYZ_camera}conf:{conf:.2f}'
+                        # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+                        # box = minRectangle(xywh)
+                        # cv2.drawContours(im0, [box], 0, (255, 0, 0))
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
@@ -173,3 +207,4 @@ if __name__ == '__main__':
                 strip_optimizer(opt.weights)
         else:
             detect()
+            
