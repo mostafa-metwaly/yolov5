@@ -1,0 +1,15 @@
+YOLOv5
+
+## Trainning the model with hyperparameters.
+python train.py --img 640 --batch 16 --epochs 150 --data data3.yaml --weights yolov5x.pt --hyp data/hyp.scratch.yaml
+	
+python test.py --weights yolov5s.pt --data data3.yaml --img 640
+
+
+python detect.py --weights yolov5s.pt --img 640 --source ./run/detect/images/
+
+
+python detect.py --weights ./runs/train/exp40/weights/best.pt --img 640 --conf 0.7 --source 0 --view-img --device 0 --classes 1
+
+
+python detect.py --source 2 --weights best3.pt --conf 0.8 --view-img --classes 1 --save-txt --save-conf --device cpu
