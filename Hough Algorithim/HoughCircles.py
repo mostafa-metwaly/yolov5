@@ -54,7 +54,7 @@ def generate_colors(num):
   return [(r(),r(),r()) for _ in range(num)] 
 
 def process_video(video_path, frame_process):
-  vid = cv2.VideoCapture(video_path, cv2.CAP_DSHOW)
+  vid = cv2.VideoCapture(video_path)
   try:
     while(True):
       ret, frame = vid.read()
