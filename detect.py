@@ -17,6 +17,8 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 
+
+
 def minRectangle(xywhpixels):
     x,y,w,h = xywhpixels
     pts = array([[x-w/2,y+h/2],[x-w/2,y-h/2],[x+w/2,y-h/2], [x+w/2,y+h/2]])
@@ -32,10 +34,10 @@ def minRectangle(xywhpixels):
 
 def getXYZworld(xywhpixels):
     x,y,w,h = xywhpixels 
-    # intrinsic_Mtx = load("mtx_logi.npy")          #Logitech Camera
-    
+    # intrinsic_Mtx = load("mtx_logi.npy")          #Logitech Camera (another used camera in testing)
+    #this is the camera mounted on robot:
     intrinsic_Mtx = load("mtx_logiRobot.npy")          #Our Calibration of Robot_Real Camera
-    # intrinsic_Mtx = load("RobotCameraIntrinsics.npy")   #Robot_Real Camera
+    # intrinsic_Mtx = load("RobotCameraIntrinsics.npy")   #calibration from riby for Robot_Real Camera
     Inv_intrinsic_Mtx = linalg.inv(intrinsic_Mtx) 
     f = sum([intrinsic_Mtx[0,0],intrinsic_Mtx[1,1]])/2.0
     z = 40 * f / min(w,h)
@@ -142,11 +144,12 @@ def detect(save_img=False):
                         with open( 'bo7sen' + '.txt', 'w') as f:
                             f.write(str(XYZ_camera[0]) + " " + str(XYZ_camera[1]) + " " + str(XYZ_camera[2]))
                             # f.write(('%g ' * len(line)).rstrip() % line + '\n')
-
+#we have modified this part to detect the XXYZ and calculate them then save vaalues to txt file 
                     if save_img or view_img:  # Add bbox to image
                         print(XYZ_camera) 
                         label = f'{names[int(cls)]}{XYZ_camera}conf:{conf:.2f}'
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+                        #New modifiacation in order to get minimum area for the rectangle and optimize the center
                         # box = minRectangle(xywh)
                         # cv2.drawContours(im0, [box], 0, (255, 0, 0))
 

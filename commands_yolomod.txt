@@ -1,15 +1,32 @@
 YOLOv5
 
+
+
+## this yolov5 fork has different detect file (where we added part for modified camera parameters and another part for exporting a txt file with the values of object x,y,z wrt the camera)
+"you will need the detect file and the interinsic parameters of the camera.npy"
+"you will need the weights for the latest trained model(exp60) in the runs/train/exp60/weights/best.pt   (this is the model trained on yolov5x    with best results up till now)"
+"if you want to train a new model you will need the data itself with labels and it could be found in the data folder under (train and valid) you will also need the modified yaml file (data3.yaml) and maybe tune the hyperparameters (hyp.scratch.yaml)"
+
+
+
 ## Trainning the model with hyperparameters.
 python train.py --img 640 --batch 16 --epochs 150 --data data3.yaml --weights yolov5x.pt --hyp data/hyp.scratch.yaml
 	
-python test.py --weights yolov5s.pt --data data3.yaml --img 640
+
+## Testing the model performance on specific dataset
+python test.py --weights yolov5s.pt --data data3.yaml --source ./data/images/
 
 
-python detect.py --weights yolov5s.pt --img 640 --source ./run/detect/images/
 
+## Detection of the objects:
+#run this on the given path of static folder containing images to be detected  ---> the results will be saved in the runs detect folder in a new exp.
 
-python detect.py --weights ./runs/train/exp40/weights/best.pt --img 640 --conf 0.7 --source 0 --view-img --device 0 --classes 1
+python detect.py --weights yolov5s.pt --img 640 --source ./data/images/
+
+# using the weights from the specific training experiment (you could use best{2,3,60} from home these were old models), minimum confidence level 0.6 , source(external camera 2 or1), show the image of the detected objects , show only class 1(cylinder), choose the processing resource either cpu or gpu(0,1,2)
+
+python detect.py --weights ./runs/train/exp60/weights/best.pt --conf 0.6 --source 2 --view-img --classes 1 --device cpu
+
 
 
 python detect.py --source 2 --weights best3.pt --conf 0.8 --view-img --classes 1 --save-txt --save-conf --device cpu
