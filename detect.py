@@ -1,7 +1,9 @@
 import argparse
 import time
 from pathlib import Path
-
+import os
+import sys
+import time
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
@@ -45,6 +47,8 @@ def getXYZworld(xywhpixels):
 
 
 def detect(save_img=False):
+
+    
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
@@ -142,7 +146,7 @@ def detect(save_img=False):
                     if save_img or view_img:  # Add bbox to image
                         print(XYZ_camera) 
                         label = f'{names[int(cls)]}{XYZ_camera}conf:{conf:.2f}'
-                        # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
                         # box = minRectangle(xywh)
                         # cv2.drawContours(im0, [box], 0, (255, 0, 0))
 
@@ -153,6 +157,7 @@ def detect(save_img=False):
             if view_img:
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
+
 
             # Save results (image with detections)
             if save_img:
@@ -179,6 +184,7 @@ def detect(save_img=False):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
@@ -206,5 +212,11 @@ if __name__ == '__main__':
                 detect()
                 strip_optimizer(opt.weights)
         else:
-            detect()
+            a = detect()
+
+            time.sleep(10)
+            a.start()
+            a.terminate()
             
+            os.system('cd /home/mostafa/iiwa_stack_ws/src/iiwa_test/my_iiwa_pkg/scripts \r\n python HoughCircles.py')
+
